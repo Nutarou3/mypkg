@@ -3,11 +3,11 @@ on: push
 jobs:
   test:
     runs-on: ubuntu-22.04
-    container: Nutarou3/ubuntu22.04-ros2:latest #前ページのコンテナを使うという宣言
+    container: ryuichiueda/ubuntu22.04-ros2:latest 
     steps:
-      - uses: actions/checkout@v2 #コンテナのカレントディレクトリにリポジトリを配置
+      - uses: actions/checkout@v2 
       - name: build and test
         run: |
-          rsync -av ./ /root/ros2_ws/src/mypkg/    # リポジトリの下をros2_ws下にコピー
-          cd /root/ros2_ws　#↓追加のパッケージが必要なら実行前にrosdep
-          bash -xv ./src/mypkg/test/test.bash /root #実行
+          rsync -av ./ /root/ros2_ws/src/mypkg/
+          cd /root/ros2_ws
+          bash -xv ./src/mypkg/test/test.bash /root
