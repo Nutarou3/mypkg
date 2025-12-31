@@ -20,17 +20,20 @@ $ ros2 topic pub /add_reminder std_msgs/msg/String "{data: '2025-12-31 21:00:00,
 ```
 ## 使い方
 **1.システムの一括起動**
+
 ・管理ノード（reminder_node）と通知ノード（notifier_node）を同時に起動します。
 ```
 ros2 launch mypkg reminder_launch.py
 ```
 **2.リマインダーの登録** 
+
 ・標準的な ROS 2 のトピック送信コマンドを使用して予定を追加します。
 ```
 ros2 topic pub /add_reminder std_msgs/msg/String "{data: 'YYYY-MM-DD HH:MM:SS,メッセージ'}" --once
 ```
-**discordへの実装方法**
-- 通知をdiscordへ送るには以下の手順で実行します
+## discordへの実装方法
+**通知をdiscordへ送るには以下の手順で実行します**
+
 - 1.新たなサーバーを作成する。または、既存のサーバーを開く
 - 2.テキストチャンネルから"チャンネルの編集"を開く
 - 3.連携サービスを開く
