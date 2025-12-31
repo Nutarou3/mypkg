@@ -21,7 +21,7 @@ $ ros2 topic pub /add_reminder std_msgs/msg/String "{data: '2025-12-31 21:00:00,
 ## 使い方
 **1.システムの一括起動**
 
-・管理ノード（reminder_node）と通知ノード（notifier_node）を同時に起動します。
+・管理ノード（```reminder_node```）と通知ノード（```notifier_node```）を同時に起動します。
 ```
 ros2 launch mypkg reminder_launch.py
 ```
@@ -39,7 +39,7 @@ ros2 topic pub /add_reminder std_msgs/msg/String "{data: 'YYYY-MM-DD HH:MM:SS,�
 - 3.**連携サービス**を開く
 - 4.**ウェブフック**を開き、**新しいウェブフック**を作成する
 - 5.作成したものを開き**ウェブフックをコピー**をクリックする
-- 6.コピーしたURLを**notifier_node.py**内の以下の位置にペーストする
+- 6.コピーしたURLを```notifier_node.py```内の以下の位置にペーストする
 ```
 26 self.webhook_url = ""
 ```
@@ -48,8 +48,8 @@ ros2 topic pub /add_reminder std_msgs/msg/String "{data: 'YYYY-MM-DD HH:MM:SS,�
 ・OS: WSL (Ubuntu) または Linux 環境
 ・ROS 2: Humble Hawksbill
 ## 構成ノードと通信
-・reminder_node: 予定のデータベース管理および時間監視（~/.ros_reminders.json に自動保存）。
-・notifier_node: /reminder_alert を購読し、ターミナルとデスクトップ通知へ出力。
+**reminder_node**: 予定のデータベース管理および時間監視（```~/.ros_reminders.json``` に自動保存）。
+**notifier_node**: ```/reminder_alert``` を購読し、ターミナルとデスクトップ通知へ出力。
 ## 引用・参考資料
 ・ryuichiueda/my_slides (robosys_2022)
 ## ライセンス
