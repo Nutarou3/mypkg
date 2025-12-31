@@ -55,3 +55,12 @@ ros2 topic pub /add_reminder std_msgs/msg/String "{data: 'YYYY-MM-DD HH:MM:SS,�
 ## ライセンス
 Copyright (c) 2025 Gentoku Morimoto.
 Licensed under the GNU General Public License v3.0 (GPL 3.0).
+## 引用・参考資料
+
+本パッケージのコードの骨子および説明の一部は、下記の講義スライドのものを利用しています。
+
+・**著者**:Ryuichi Ueda
+
+・**資料元**: https://github.com/ryuichiueda/my_slides/tree/master/robosys_2022
+
+・**ライセンス**: CC BY-SA 4.0
