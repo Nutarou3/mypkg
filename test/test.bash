@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bicd ~/ros2_ws/src/mypkgn/bash
 # SPDX-FileCopyrightText: 2025 Gentoku Morimoto
 # SPDX-License-Identifier: GPL-3.0-only
 
