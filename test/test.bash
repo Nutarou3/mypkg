@@ -5,7 +5,7 @@
 dir=~
 [ "$1" != "" ] && dir="$1"
 
-# 1. ROS 2の環境を読み込む（これが重要！）
+# 1. ROS 2の環境を読み込む
 source /opt/ros/humble/setup.bash
 
 cd $dir/ros2_ws
@@ -15,6 +15,7 @@ colcon build --packages-select mypkg
 source install/setup.bash
 
 # 3. リマインダーノードをバックグラウンドで起動
+rm -f /tmp/mypkg_test.log
 ros2 run mypkg reminder_node > /tmp/mypkg_test.log 2>&1 &
 PID=$!
 
@@ -23,9 +24,9 @@ sleep 5
 
 # 4. テスト用の予定を登録（5秒後）
 TARGET_TIME=$(date -d "5 seconds" +"%Y-%m-%d %H:%M:%S")
-ros2 topic pub /add_reminder std_msgs/msg/String "{data: '$TARGET_TIME,TEST_MSG'}" --once
+timeout 10 ros2 topic pub /add_reminder std_msgs/msg/String "{data: '$TARGET_TIME,TEST_MSG'}" --once
 
-# 5. ログの確認（最大20秒間待機して監視）
+# 5. ログの確認
 echo "Waiting for log..."
 for i in {1..20}; do
     if grep -q "Registered" /tmp/mypkg_test.log; then
@@ -36,8 +37,7 @@ for i in {1..20}; do
     sleep 1
 done
 
-# ループを抜けてしまったら失敗
-echo "Test Failed: Confirmation log not found after waiting."
+echo "Test Failed: Confirmation log not found."
 cat /tmp/mypkg_test.log
 kill $PID
 exit 1
