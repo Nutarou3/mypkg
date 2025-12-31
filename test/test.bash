@@ -1,4 +1,4 @@
-#!/bicd ~/ros2_ws/src/mypkgn/bash
+#!/bin/bash
 # SPDX-FileCopyrightText: 2025 Gentoku Morimoto
 # SPDX-License-Identifier: GPL-3.0-only
 
@@ -27,7 +27,6 @@ TARGET_TIME=$(date -d "5 seconds" +"%Y-%m-%d %H:%M:%S")
 timeout 10 ros2 topic pub /add_reminder std_msgs/msg/String "{data: '$TARGET_TIME,TEST_MSG'}" --once
 
 # 5. ログの確認（最大20秒間待機して監視）
-# タイミングによって失敗しないよう、ループで確認します
 echo "Waiting for log..."
 for i in {1..20}; do
     if grep -q "Registered" /tmp/mypkg_test.log; then
