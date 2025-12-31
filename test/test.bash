@@ -5,7 +5,7 @@
 dir=~
 [ "$1" != "" ] && dir="$1"
 
-# 1. ROS 2の環境を読み込む
+# 1. ROS 2の環境を読み込む（これが重要！）
 source /opt/ros/humble/setup.bash
 
 cd $dir/ros2_ws
@@ -36,8 +36,8 @@ for i in {1..20}; do
     sleep 1
 done
 
-# 失敗時
-echo "Test Failed: Confirmation log not found."
+# ループを抜けてしまったら失敗
+echo "Test Failed: Confirmation log not found after waiting."
 cat /tmp/mypkg_test.log
 kill $PID
 exit 1
