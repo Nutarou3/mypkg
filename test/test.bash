@@ -23,8 +23,7 @@ sleep 5
 
 # 4. テスト用の予定を登録（5秒後）
 TARGET_TIME=$(date -d "5 seconds" +"%Y-%m-%d %H:%M:%S")
-# timeout コマンドでハングアップ防止（10秒で打ち切り）
-timeout 10 ros2 topic pub /add_reminder std_msgs/msg/String "{data: '$TARGET_TIME,TEST_MSG'}" --once
+ros2 topic pub /add_reminder std_msgs/msg/String "{data: '$TARGET_TIME,TEST_MSG'}" --once
 
 # 5. ログの確認（最大20秒間待機して監視）
 echo "Waiting for log..."
@@ -37,8 +36,8 @@ for i in {1..20}; do
     sleep 1
 done
 
-# ループを抜けてしまったら失敗
-echo "Test Failed: Confirmation log not found after waiting."
+# 失敗時
+echo "Test Failed: Confirmation log not found."
 cat /tmp/mypkg_test.log
 kill $PID
 exit 1
