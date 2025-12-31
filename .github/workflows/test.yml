@@ -4,7 +4,7 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     # ROS 2 Humble用のイメージを指定します
-    container: ryuichiueda/ubuntu22.04-ros2-humble:latest 
+    container: ryuichiueda/ubuntu22.04-ros2:latest 
     steps:
       - uses: actions/checkout@v3
       - name: build and test
