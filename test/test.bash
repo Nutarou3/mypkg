@@ -16,6 +16,7 @@ colcon build --packages-select mypkg
 source install/setup.bash
 
 # 3. リマインダーノードをバックグラウンドで起動
+# ログを /tmp/mypkg_test.log に保存して後で確認します
 ros2 run mypkg reminder_node > /tmp/mypkg_test.log 2>&1 &
 PID=$!
 
