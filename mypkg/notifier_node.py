@@ -1,94 +1,105 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2025 Gentoku Morimoto
-# Licensed under the GPL-3.0-only.
+# Copyright (c) 2025 Gentoku Morimoto.
+# Licensed under the GNU General Public License v3.0.
 
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-import subprocess
-import shutil
-import urllib.request
 import json
+import os
+from datetime import datetime
 
-class NotifierNode(Node):
+class ReminderNode(Node):
     """
-    リマインダーを「ターミナル」「OSデスクトップ」「Discord」の3箇所に通知するノード。
-    LINE Notifyの終了に伴い、Discord Webhookに対応しています。
+    リマインダーを管理し、指定時刻に通知トピックを配信するノード。
+    予定はホームディレクトリの隠しファイルに保存され、再起動しても保持されます。
     """
     def __init__(self):
-        super().__init__('notifier_node')
+        super().__init__('reminder_node')
         
-        # --- Discord通知の設定 (任意) ---
-        # Discordのチャンネル設定から「ウェブフックURL」を取得してここに貼り付けてください
-        # 空のままでも、ターミナル上での通知は機能します
-        self.webhook_url = "https://discord.com/api/webhooks/1455895508865253466/3dP1FIzmu4fHCn4fMsEyooy1eNd18fRKpjwCQEQOrWYTaKL4R6L9PvjqVXGRSg0eCDip" 
+        # 通知用パブリッシャー
+        self.pub_alert = self.create_publisher(String, '/reminder_alert', 10)
         
-        self.subscription = self.create_subscription(
-            String,
-            '/reminder_alert',
-            self.listener_callback,
+        # 登録用サブスクライバー
+        self.sub_add = self.create_subscription(
+            String, 
+            '/add_reminder', 
+            self.add_callback, 
             10
         )
-        self.get_logger().info('Notifier Node started. Waiting for alerts...')
-        if not self.webhook_url:
-            self.get_logger().info('Hint: Set webhook_url to receive notifications on Discord.')
-
-    def listener_callback(self, msg):
-        # 1. ターミナルへの強調表示 (最優先・確実)
-        self.display_terminal_alert(msg.data)
-
-        # 2. Discordへの通知 (URLが設定されている場合のみ)
-        if self.webhook_url:
-            self.send_discord_notification(msg.data)
-
-        # 3. OSのデスクトップ通知 (WSL2等では失敗するため、エラーを無視)
-        self.send_os_notification(msg.data)
-
-    def display_terminal_alert(self, text):
-        """ターミナルに目立つように枠線付きで表示する"""
-        term_width = shutil.get_terminal_size().columns
-        border = "!" * term_width
-        print(f"\n{border}")
-        print(f"  [REMINDER] {text}  ".center(term_width, " "))
-        print(f"{border}\n")
-
-    def send_discord_notification(self, message):
-        """Discord Webhookを使用してメッセージを送信する"""
-        payload = {
-            "content": f"🔔 **リマインダー通知**\n{message}"
-        }
-        data = json.dumps(payload).encode("utf-8")
         
-        req = urllib.request.Request(
-            self.webhook_url, 
-            data=data, 
-            headers={"Content-Type": "application/json", "User-Agent": "ROS2-Notifier"}
-        )
+        # データの保存先設定
+        self.db_path = os.path.expanduser('~/.ros_reminders.json')
+        self.reminders = self.load_data()
         
+        # 1秒ごとに時刻をチェックするタイマー
+        self.timer = self.create_timer(1.0, self.check_time)
+        
+        self.get_logger().info('Reminder Node has started. Waiting for reminders...')
+
+    def load_data(self):
+        """ファイルから予定を読み込む"""
+        if os.path.exists(self.db_path):
+            try:
+                with open(self.db_path, 'r') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return []
+
+    def save_data(self):
+        """予定をファイルへ保存する"""
+        with open(self.db_path, 'w') as f:
+            json.dump(self.reminders, f)
+
+    def add_callback(self, msg):
+        """
+        予定登録を受け取った時の処理
+        入力形式: 'YYYY-MM-DD HH:MM:SS,メッセージ'
+        """
         try:
-            with urllib.request.urlopen(req) as res:
-                if res.getcode() == 204: # Discord Webhook 成功
-                    self.get_logger().info('Discord notification sent successfully.')
+            parts = msg.data.split(',', 1)
+            if len(parts) < 2:
+                raise ValueError("Format must be 'YYYY-MM-DD HH:MM:SS,Message'")
+            
+            time_str, content = parts[0].strip(), parts[1].strip()
+            
+            # 日付形式のチェック
+            datetime.strptime(time_str, '%Y-%m-%d %H:%M:%S')
+            
+            self.reminders.append({'time': time_str, 'message': content})
+            self.save_data()
+            
+            # テストスクリプトがこの「Registered:」という単語を探します
+            self.get_logger().info(f'Registered: [{content}] at {time_str}')
+            
         except Exception as e:
-            self.get_logger().error(f'Failed to send Discord notification: {e}')
+            self.get_logger().error(f'Failed to add reminder: {e}')
 
-    def send_os_notification(self, message):
-        """OSの通知コマンドを実行。失敗しても赤いログを出さない設定"""
-        try:
-            subprocess.run([
-                'notify-send', 
-                '【ROS 2 Reminder】', 
-                message, 
-                '--icon=appointment-soon'
-            ], check=False, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-        except Exception:
-            pass
+    def check_time(self):
+        """毎秒実行され、予定時刻になったものを配信する"""
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # まだ時間が来ていない予定と、時間が来た予定を分ける
+        new_list = [r for r in self.reminders if now < r['time']]
+        triggered = [r for r in self.reminders if now >= r['time']]
+        
+        for r in triggered:
+            alert_msg = String()
+            alert_msg.data = f"【REMINDER】{r['message']} (Scheduled: {r['time']})"
+            self.pub_alert.publish(alert_msg)
+            self.get_logger().info(f"Alert published: {r['message']}")
+            
+        # リストを更新して保存（通知済みを削除）
+        if triggered:
+            self.reminders = new_list
+            self.save_data()
 
 def main(args=None):
     rclpy.init(args=args)
-    node = NotifierNode()
+    node = ReminderNode()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
