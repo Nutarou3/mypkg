@@ -3,11 +3,14 @@ on: push
 jobs:
   test:
     runs-on: ubuntu-22.04
-    container: ryuichiueda/ubuntu22.04-ros2:latest 
+    # ROS 2 Humble用のイメージを指定します
+    container: ryuichiueda/ubuntu22.04-ros2-humble:latest 
     steps:
-      - uses: actions/checkout@v2 
+      - uses: actions/checkout@v3
       - name: build and test
         run: |
+          # ワークスペースにファイルをコピー
           rsync -av ./ /root/ros2_ws/src/mypkg/
           cd /root/ros2_ws
+          # テストスクリプトを実行。引数に /root を渡します
           bash -xv ./src/mypkg/test/test.bash /root
